@@ -64,6 +64,10 @@ export class Card3D {
     const color = type === '+' ? CARD_PLUS_COLOR : CARD_MINUS_COLOR;
     this.frontMaterial.color.setHex(color);
 
+    // Dispose old textures before creating new ones (prevent GPU memory leak)
+    if (this.frontMaterial.map) this.frontMaterial.map.dispose();
+    if (this.backMaterial.map) this.backMaterial.map.dispose();
+
     // Create front texture (+ or - symbol)
     const frontCanvas = this.createCardFace(type, color);
     const frontTex = new THREE.CanvasTexture(frontCanvas);

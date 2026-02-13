@@ -85,11 +85,15 @@ export class SceneSetup {
 
   onAnimate(callback) {
     this.animationCallbacks.push(callback);
+    // Return removal function
+    return () => {
+      const idx = this.animationCallbacks.indexOf(callback);
+      if (idx >= 0) this.animationCallbacks.splice(idx, 1);
+    };
   }
 
   start() {
-    const animate = () => {
-      requestAnimationFrame(animate);
+    this.renderer.setAnimationLoop((/* timestamp */) => {
       const delta = this.clock.getDelta();
       const elapsed = this.clock.getElapsedTime();
       this.controls.update();
@@ -97,7 +101,22 @@ export class SceneSetup {
         cb(delta, elapsed);
       }
       this.renderer.render(this.scene, this.camera);
-    };
-    animate();
+    });
+  }
+
+  dispose() {
+    this.renderer.setAnimationLoop(null);
+    this.controls.dispose();
+    this.scene.traverse(child => {
+      if (child.geometry) child.geometry.dispose();
+      if (child.material) {
+        const materials = Array.isArray(child.material) ? child.material : [child.material];
+        for (const mat of materials) {
+          if (mat.map) mat.map.dispose();
+          mat.dispose();
+        }
+      }
+    });
+    this.renderer.dispose();
   }
 }

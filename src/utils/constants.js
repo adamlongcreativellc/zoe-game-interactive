@@ -8,41 +8,41 @@ export const PLAYER_COLORS = {
 
 export const COLOR_ORDER = ['red', 'blue', 'green', 'yellow'];
 
-// Board space definitions: type = '+' or '-', bonus spaces are 'bonus'
+// Board space definitions: type = '+' or '-'
 // Strict alternation: odd index = '+', even index = '-'
-// Bonus spaces sit where the alternation would be but get type 'bonus'
+// Bonus spaces have a fixed bonusDirection: 1 = forward, -1 = back
 export const SPACES = [
   null, // index 0 = no space (1-indexed)
-  { num: 1, type: '+', bonus: false },   // odd = +
-  { num: 2, type: '-', bonus: false },   // even = -
-  { num: 3, type: '+', bonus: true, bonusAmount: 2, label: '?' },  // odd = +
-  { num: 4, type: '+', bonus: false },
-  { num: 5, type: '-', bonus: false },
-  { num: 6, type: '+', bonus: false },
-  { num: 7, type: '-', bonus: false },
-  { num: 8, type: '-', bonus: true, bonusAmount: 1, label: '?' },  // even = -
+  { num: 1, type: '+', bonus: false },
+  { num: 2, type: '-', bonus: false },
+  { num: 3, type: '+', bonus: true, bonusAmount: 2, bonusDirection: 1 },   // forward 2
+  { num: 4, type: '-', bonus: false },
+  { num: 5, type: '+', bonus: false },
+  { num: 6, type: '-', bonus: false },
+  { num: 7, type: '+', bonus: false },
+  { num: 8, type: '-', bonus: true, bonusAmount: 1, bonusDirection: -1 },  // back 1
   { num: 9, type: '+', bonus: false },
   { num: 10, type: '-', bonus: false },
   { num: 11, type: '+', bonus: false },
-  { num: 12, type: '-', bonus: true, bonusAmount: 3, label: '?' }, // even = -
+  { num: 12, type: '-', bonus: true, bonusAmount: 3, bonusDirection: 1 },  // forward 3
   { num: 13, type: '+', bonus: false },
   { num: 14, type: '-', bonus: false },
   { num: 15, type: '+', bonus: false },
   { num: 16, type: '-', bonus: false },
   { num: 17, type: '+', bonus: false },
   { num: 18, type: '-', bonus: false },
-  { num: 19, type: '+', bonus: true, bonusAmount: 2, label: '?' }, // odd = +
-  { num: 20, type: '+', bonus: false },
-  { num: 21, type: '-', bonus: false },
-  { num: 22, type: '+', bonus: false },
-  { num: 23, type: '+', bonus: true, bonusAmount: 2, label: '?' }, // odd = +
-  { num: 24, type: '+', bonus: false },
-  { num: 25, type: '-', bonus: false },
-  { num: 26, type: '+', bonus: false },
-  { num: 27, type: '-', bonus: false },
-  { num: 28, type: '+', bonus: false },
-  { num: 29, type: '-', bonus: false },
-  { num: 30, type: '-', bonus: true, bonusAmount: 99, label: 'WIN' },
+  { num: 19, type: '+', bonus: true, bonusAmount: 2, bonusDirection: -1 }, // back 2
+  { num: 20, type: '-', bonus: false },
+  { num: 21, type: '+', bonus: false },
+  { num: 22, type: '-', bonus: false },
+  { num: 23, type: '+', bonus: true, bonusAmount: 2, bonusDirection: 1 },  // forward 2
+  { num: 24, type: '-', bonus: false },
+  { num: 25, type: '+', bonus: false },
+  { num: 26, type: '-', bonus: false },
+  { num: 27, type: '+', bonus: false },
+  { num: 28, type: '-', bonus: false },
+  { num: 29, type: '+', bonus: false },
+  { num: 30, type: '-', bonus: true, bonusAmount: 99, bonusDirection: 1 }, // WIN
 ];
 
 // Timing

@@ -33,8 +33,7 @@ export class BonusSpaces {
       };
     }
 
-    // Randomize direction at runtime — surprise!
-    const direction = Math.random() > 0.5 ? 1 : -1;
+    const direction = space.bonusDirection;
     const amount = space.bonusAmount;
     const targetSpace = clamp(spaceNum + direction * amount, 1, TOTAL_SPACES);
     const label = `${direction > 0 ? '+' : '-'}${amount}`;

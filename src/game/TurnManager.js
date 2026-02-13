@@ -289,8 +289,8 @@ export class TurnManager {
       await delay(300);
       this.board.clearHighlight(targetPos);
 
-      // Check bonus
-      await this.checkBonus(player);
+      // Check bonus (pass pre-move position for anti-loop protection)
+      await this.checkBonus(player, currentPos);
     }
 
     // Dismiss card
@@ -338,9 +338,16 @@ export class TurnManager {
     this.startTurn();
   }
 
-  async checkBonus(player) {
+  async checkBonus(player, preMovePos) {
     const effect = this.bonusSpaces.getEffect(player.position);
     if (!effect) return;
+
+    // Anti-loop: if the bonus would send the player back to where they came from, skip it
+    if (effect.targetSpace === preMovePos) {
+      this.state.phase = PHASES.BONUS;
+      await this.showMessage('Bonus Space!', 'Safe! You stay here.', 1200);
+      return;
+    }
 
     this.state.phase = PHASES.BONUS;
     this.audio.playBonus();
@@ -367,7 +374,7 @@ export class TurnManager {
     for (let i = currentPos + 1; i <= TOTAL_SPACES; i++) {
       const space = SPACES[i];
       if (!space) continue;
-      if (space.type === type || space.bonus) {
+      if (space.type === type) {
         return i;
       }
     }
