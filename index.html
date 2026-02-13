@@ -1,0 +1,957 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Zoe's Math Quest</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Gaegu:wght@300;400;700&display=swap" rel="stylesheet" />
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      overflow: hidden;
+      font-family: 'Gaegu', cursive;
+      background: #1a1a2e;
+    }
+
+    #game-canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+    }
+
+    #ui-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 10;
+      pointer-events: none;
+    }
+
+    #ui-overlay > * {
+      pointer-events: auto;
+    }
+
+    /* Setup Screen */
+    #setup-screen {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      background: rgba(15, 10, 30, 0.82);
+      backdrop-filter: blur(12px);
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      padding: 1.5rem 1rem 2rem;
+    }
+
+    #setup-screen h1 {
+      font-size: clamp(2.2rem, 5vw, 4rem);
+      font-weight: 700;
+      background: linear-gradient(135deg, #ff8a8a, #ffb347, #ffe066, #7dde89, #5cc8e0, #b99aff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      text-shadow: none;
+      margin-bottom: 0.3rem;
+      filter: drop-shadow(0 2px 6px rgba(0,0,0,0.5));
+      animation: titleBounce 2s ease-in-out infinite;
+      flex-shrink: 0;
+    }
+
+    @keyframes titleBounce {
+      0%, 100% { transform: scale(1) rotate(-1deg); }
+      50% { transform: scale(1.05) rotate(1deg); }
+    }
+
+    #setup-screen .subtitle {
+      font-size: 1.3rem;
+      color: #fff;
+      font-weight: 700;
+      margin-bottom: 1rem;
+      text-shadow: 1px 1px 3px rgba(0,0,0,0.5);
+      flex-shrink: 0;
+    }
+
+    .setup-section {
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 20px;
+      padding: 1rem 1.5rem;
+      margin: 0.3rem;
+      border: 2px solid rgba(255, 255, 255, 0.2);
+      flex-shrink: 0;
+    }
+
+    .setup-section h3 {
+      color: #fff;
+      font-size: 1.4rem;
+      margin-bottom: 0.8rem;
+      text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+    }
+
+    .player-count-buttons,
+    .round-count-buttons {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      margin-bottom: 1rem;
+    }
+
+    .count-btn {
+      font-family: 'Gaegu', cursive;
+      font-size: 1.4rem;
+      font-weight: 700;
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      border: 3px solid rgba(255, 255, 255, 0.45);
+      background: rgba(255, 255, 255, 0.12);
+      color: #fff;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-shadow: 1px 1px 2px rgba(0,0,0,0.4);
+    }
+
+    .count-btn:hover, .count-btn.active {
+      background: rgba(255, 255, 255, 0.25);
+      border-color: #fff;
+      transform: scale(1.1);
+    }
+
+    .count-btn.active {
+      background: rgba(255, 255, 255, 0.35);
+      border-color: #fff;
+    }
+
+    .player-configs {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.6rem;
+      justify-content: center;
+      max-width: 500px;
+      width: 100%;
+      flex-shrink: 0;
+    }
+
+    .player-config {
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 14px;
+      padding: 0.7rem 0.9rem;
+      border: 2px solid rgba(255, 255, 255, 0.1);
+      transition: all 0.3s;
+    }
+
+    .player-config.active {
+      border-color: var(--player-color, #fff);
+      box-shadow: 0 0 20px var(--player-color-glow, rgba(255,255,255,0.2));
+    }
+
+    .player-config label {
+      display: block;
+      color: #fff;
+      font-size: 1rem;
+      font-weight: 700;
+      margin-bottom: 0.2rem;
+      text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.4);
+    }
+
+    .player-config input[type="text"] {
+      font-family: 'Gaegu', cursive;
+      font-size: 1.1rem;
+      width: 100%;
+      padding: 0.25rem 0.5rem;
+      border-radius: 8px;
+      border: 2px solid rgba(255, 255, 255, 0.2);
+      background: rgba(255, 255, 255, 0.1);
+      color: #fff;
+      margin-bottom: 0.3rem;
+      outline: none;
+    }
+
+    .player-config input:focus {
+      border-color: var(--player-color, #ffd93d);
+    }
+
+    .color-options {
+      display: flex;
+      gap: 0.3rem;
+      margin-bottom: 0.3rem;
+    }
+
+    .color-btn {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      border: 3px solid transparent;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .color-btn:hover {
+      transform: scale(1.2);
+    }
+
+    .color-btn.selected {
+      border-color: #fff;
+      transform: scale(1.2);
+      box-shadow: 0 0 10px currentColor;
+    }
+
+    .color-btn.taken {
+      opacity: 0.3;
+      cursor: not-allowed;
+    }
+
+    .team-options {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .team-btn {
+      font-family: 'Gaegu', cursive;
+      font-size: 1rem;
+      font-weight: 700;
+      padding: 0.2rem 0.8rem;
+      border-radius: 10px;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      background: rgba(255, 255, 255, 0.08);
+      color: #fff;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .team-btn:hover, .team-btn.selected {
+      border-color: #fff;
+      color: #fff;
+      background: rgba(255, 255, 255, 0.25);
+    }
+
+    #start-btn {
+      font-family: 'Gaegu', cursive;
+      font-size: 1.8rem;
+      font-weight: 700;
+      padding: 0.6rem 2.5rem;
+      border-radius: 50px;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      background: linear-gradient(135deg, #d94444, #d48500, #c9a200, #3a9e4a, #2a8ea8, #7a5cc8);
+      color: #fff;
+      cursor: pointer;
+      margin-top: 1rem;
+      margin-bottom: 1rem;
+      transition: all 0.3s;
+      text-shadow: 1px 1px 4px rgba(0,0,0,0.6);
+      flex-shrink: 0;
+    }
+
+    #start-btn:hover {
+      transform: scale(1.08);
+      box-shadow: 0 0 30px rgba(255, 215, 61, 0.5);
+    }
+
+    #start-btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* HUD */
+    #hud {
+      display: none;
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      padding: 1rem;
+    }
+
+    .hud-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+
+    .current-player-display {
+      background: rgba(0, 0, 0, 0.65);
+      border-radius: 16px;
+      padding: 0.6rem 1.2rem;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .player-dot {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      border: 2px solid rgba(255, 255, 255, 0.5);
+    }
+
+    .current-player-name {
+      color: #fff;
+      font-size: 1.4rem;
+      font-weight: 700;
+      text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.6);
+    }
+
+    .round-display {
+      color: #fff;
+      font-size: 1.1rem;
+      font-weight: 700;
+      text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5);
+      margin-top: 0.3rem;
+      margin-left: 0.3rem;
+    }
+
+    .timer-container {
+      position: relative;
+      width: 80px;
+      height: 80px;
+    }
+
+    .timer-circle {
+      width: 100%;
+      height: 100%;
+    }
+
+    .timer-circle-bg {
+      fill: none;
+      stroke: rgba(255, 255, 255, 0.1);
+      stroke-width: 6;
+    }
+
+    .timer-circle-progress {
+      fill: none;
+      stroke: #6bcb77;
+      stroke-width: 6;
+      stroke-linecap: round;
+      transform: rotate(-90deg);
+      transform-origin: center;
+      transition: stroke-dashoffset 0.1s linear, stroke 0.3s;
+    }
+
+    .timer-circle-progress.warning {
+      stroke: #ff6b6b;
+    }
+
+    .timer-text {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      color: #fff;
+      font-size: 1.8rem;
+      font-weight: 700;
+    }
+
+    .timer-text.warning {
+      color: #ff6b6b;
+      animation: timerPulse 0.5s ease-in-out infinite;
+    }
+
+    @keyframes timerPulse {
+      0%, 100% { transform: translate(-50%, -50%) scale(1); }
+      50% { transform: translate(-50%, -50%) scale(1.2); }
+    }
+
+    .tally-board {
+      background: rgba(0, 0, 0, 0.65);
+      border-radius: 16px;
+      padding: 0.6rem 1rem;
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .tally-board h4 {
+      color: #fff;
+      font-size: 1.1rem;
+      font-weight: 700;
+      margin-bottom: 0.3rem;
+      text-align: center;
+    }
+
+    .tally-row {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin: 0.2rem 0;
+    }
+
+    .tally-dot {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+    }
+
+    .tally-name {
+      color: #fff;
+      font-size: 1rem;
+      font-weight: 700;
+      min-width: 60px;
+    }
+
+    .tally-marks {
+      color: #fff;
+      font-size: 1.1rem;
+      font-weight: 700;
+      letter-spacing: 2px;
+    }
+
+    /* Answer Input */
+    #answer-area {
+      display: none;
+      position: absolute;
+      bottom: 2rem;
+      left: 50%;
+      transform: translateX(-50%);
+      text-align: center;
+    }
+
+    .equation-display {
+      font-size: 2.5rem;
+      font-weight: 700;
+      color: #fff;
+      background: rgba(0, 0, 0, 0.75);
+      padding: 0.5rem 2rem;
+      border-radius: 16px;
+      margin-bottom: 1rem;
+      backdrop-filter: blur(10px);
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
+      border: 2px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .answer-display {
+      font-size: 2.2rem;
+      font-weight: 700;
+      color: #fff;
+      min-height: 2.5rem;
+      margin-bottom: 0.8rem;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
+      background: rgba(0, 0, 0, 0.4);
+      border-radius: 12px;
+      padding: 0.2rem 1.5rem;
+      min-width: 80px;
+      display: inline-block;
+    }
+
+    .number-pad {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 0.5rem;
+      max-width: 400px;
+      margin: 0 auto;
+    }
+
+    .num-btn {
+      font-family: 'Gaegu', cursive;
+      font-size: 1.8rem;
+      font-weight: 700;
+      width: 64px;
+      height: 64px;
+      border-radius: 16px;
+      border: 3px solid rgba(255, 255, 255, 0.4);
+      background: rgba(0, 0, 0, 0.45);
+      color: #fff;
+      cursor: pointer;
+      transition: all 0.15s;
+      backdrop-filter: blur(8px);
+      text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+    }
+
+    .num-btn:hover {
+      background: rgba(0, 0, 0, 0.6);
+      border-color: #fff;
+      transform: scale(1.08);
+    }
+
+    .num-btn:active {
+      transform: scale(0.95);
+    }
+
+    .num-btn.submit-btn {
+      background: rgba(34, 120, 50, 0.7);
+      border-color: #6bcb77;
+      color: #fff;
+      font-size: 1.2rem;
+    }
+
+    .num-btn.submit-btn:hover {
+      background: rgba(34, 120, 50, 0.9);
+    }
+
+    .num-btn.clear-btn {
+      background: rgba(160, 40, 40, 0.6);
+      border-color: #ff6b6b;
+      color: #fff;
+      font-size: 1.2rem;
+    }
+
+    /* Turn Message */
+    #turn-message {
+      display: none;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
+    }
+
+    .turn-message-text {
+      font-size: 3rem;
+      font-weight: 700;
+      color: #fff;
+      text-shadow: 3px 3px 8px rgba(0, 0, 0, 0.8), 0 0 20px rgba(0, 0, 0, 0.4);
+      animation: messageAppear 0.5s ease-out;
+      background: rgba(0, 0, 0, 0.5);
+      padding: 0.3rem 1.5rem;
+      border-radius: 16px;
+    }
+
+    @keyframes messageAppear {
+      0% { transform: scale(0.5); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    .turn-sub-message {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #fff;
+      margin-top: 0.5rem;
+      text-shadow: 2px 2px 6px rgba(0, 0, 0, 0.8);
+    }
+
+    /* Result Screen */
+    #result-screen {
+      display: none;
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(8px);
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .result-title {
+      font-size: 3.5rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, #ffd93d, #ff6b6b, #a78bfa, #45b7d1);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 1rem;
+    }
+
+    .result-subtitle {
+      font-size: 1.5rem;
+      color: #fff;
+      font-weight: 700;
+      margin-bottom: 2rem;
+      text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5);
+    }
+
+    .result-scores {
+      display: flex;
+      gap: 2rem;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-bottom: 2rem;
+    }
+
+    .result-player {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 20px;
+      padding: 1.5rem 2rem;
+      text-align: center;
+      min-width: 150px;
+      border: 3px solid transparent;
+      transition: all 0.3s;
+    }
+
+    .result-player.winner {
+      border-color: #fff;
+      background: rgba(255, 255, 255, 0.2);
+      box-shadow: 0 0 30px rgba(255, 255, 255, 0.3);
+    }
+
+    .result-player-name {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .result-player-score {
+      font-size: 3rem;
+      font-weight: 700;
+      color: #fff;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+    }
+
+    .result-crown {
+      font-size: 2rem;
+      margin-bottom: 0.3rem;
+    }
+
+    .result-btn {
+      font-family: 'Gaegu', cursive;
+      font-size: 1.8rem;
+      font-weight: 700;
+      padding: 0.7rem 2.5rem;
+      border-radius: 50px;
+      border: none;
+      background: linear-gradient(135deg, #6bcb77, #45b7d1);
+      color: #fff;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .result-btn:hover {
+      transform: scale(1.08);
+      box-shadow: 0 0 20px rgba(107, 203, 119, 0.5);
+    }
+
+    /* Game Controls (Pause / Restart) */
+    .game-controls {
+      position: absolute;
+      bottom: 1rem;
+      right: 1rem;
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .ctrl-btn {
+      font-family: 'Gaegu', cursive;
+      font-size: 1.1rem;
+      font-weight: 700;
+      padding: 0.4rem 1rem;
+      border-radius: 12px;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      background: rgba(0, 0, 0, 0.55);
+      color: #fff;
+      cursor: pointer;
+      backdrop-filter: blur(8px);
+      transition: all 0.2s;
+      text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+    }
+
+    .ctrl-btn:hover {
+      background: rgba(0, 0, 0, 0.75);
+      border-color: #fff;
+      transform: scale(1.05);
+    }
+
+    .ctrl-btn.restart-btn {
+      border-color: rgba(255, 107, 107, 0.5);
+    }
+
+    .ctrl-btn.restart-btn:hover {
+      border-color: #ff6b6b;
+      background: rgba(160, 40, 40, 0.5);
+    }
+
+    /* Pause Screen */
+    #pause-screen {
+      display: none;
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(10, 8, 25, 0.85);
+      backdrop-filter: blur(10px);
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 15;
+    }
+
+    #pause-screen.visible {
+      display: flex;
+    }
+
+    .pause-title {
+      font-size: 3rem;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 2rem;
+      text-shadow: 2px 2px 6px rgba(0, 0, 0, 0.6);
+    }
+
+    .pause-buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      align-items: center;
+    }
+
+    .pause-btn {
+      font-family: 'Gaegu', cursive;
+      font-size: 1.6rem;
+      font-weight: 700;
+      padding: 0.6rem 2.5rem;
+      border-radius: 50px;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      color: #fff;
+      cursor: pointer;
+      transition: all 0.2s;
+      min-width: 220px;
+      text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5);
+    }
+
+    .pause-btn:hover {
+      transform: scale(1.05);
+    }
+
+    .pause-btn.resume-btn {
+      background: rgba(34, 120, 50, 0.6);
+      border-color: #6bcb77;
+    }
+
+    .pause-btn.resume-btn:hover {
+      background: rgba(34, 120, 50, 0.8);
+      box-shadow: 0 0 20px rgba(107, 203, 119, 0.4);
+    }
+
+    .pause-btn.new-game-btn {
+      background: rgba(90, 60, 180, 0.5);
+      border-color: #a78bfa;
+    }
+
+    .pause-btn.new-game-btn:hover {
+      background: rgba(90, 60, 180, 0.7);
+      box-shadow: 0 0 20px rgba(167, 139, 250, 0.4);
+    }
+
+    .pause-btn.reset-btn {
+      background: rgba(160, 40, 40, 0.5);
+      border-color: #ff6b6b;
+    }
+
+    .pause-btn.reset-btn:hover {
+      background: rgba(160, 40, 40, 0.7);
+      box-shadow: 0 0 20px rgba(255, 107, 107, 0.4);
+    }
+
+    /* Card Picker */
+    #card-picker {
+      display: none;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 12;
+      gap: 1.5rem;
+      justify-content: center;
+      align-items: center;
+    }
+
+    #card-picker.visible {
+      display: flex;
+    }
+
+    .pick-card {
+      width: 110px;
+      height: 160px;
+      border-radius: 16px;
+      background: linear-gradient(135deg, #7c3aed, #9b59b6, #6b21a8);
+      border: 4px solid rgba(255, 255, 255, 0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 3rem;
+      font-weight: 700;
+      color: rgba(255, 255, 255, 0.7);
+      cursor: pointer;
+      transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+      animation: cardAppear 0.4s ease-out both, cardWiggle 2s ease-in-out 0.6s infinite;
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+      user-select: none;
+    }
+
+    .pick-card:nth-child(1) { animation-delay: 0s, 0.6s; }
+    .pick-card:nth-child(2) { animation-delay: 0.1s, 0.7s; }
+    .pick-card:nth-child(3) { animation-delay: 0.2s, 0.8s; }
+
+    .pick-card:hover {
+      transform: scale(1.08) translateY(-8px);
+      border-color: rgba(255, 255, 255, 0.8);
+      box-shadow: 0 12px 35px rgba(124, 58, 237, 0.5);
+    }
+
+    .pick-card.picked {
+      transform: scale(1.15);
+      border-color: #ffd93d;
+      box-shadow: 0 0 40px rgba(255, 217, 61, 0.6);
+      animation: none;
+    }
+
+    .pick-card.not-picked {
+      opacity: 0;
+      transform: scale(0.8);
+      pointer-events: none;
+      transition: opacity 0.3s, transform 0.3s;
+    }
+
+    @keyframes cardAppear {
+      0% { transform: scale(0) rotate(-15deg); opacity: 0; }
+      100% { transform: scale(1) rotate(0deg); opacity: 1; }
+    }
+
+    @keyframes cardWiggle {
+      0%, 100% { transform: rotate(0deg); }
+      25% { transform: rotate(-2deg); }
+      75% { transform: rotate(2deg); }
+    }
+
+    /* Confetti canvas */
+    #confetti-canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 20;
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="game-canvas"></canvas>
+  <canvas id="confetti-canvas"></canvas>
+
+  <div id="ui-overlay">
+    <!-- Setup Screen -->
+    <div id="setup-screen">
+      <h1>Zoe's Math Quest</h1>
+      <p class="subtitle">by Zoe</p>
+
+      <div class="setup-section">
+        <h3>How many players?</h3>
+        <div class="player-count-buttons">
+          <button class="count-btn" data-count="2">2</button>
+          <button class="count-btn" data-count="3">3</button>
+          <button class="count-btn" data-count="4">4</button>
+        </div>
+      </div>
+
+      <div class="setup-section">
+        <h3>How many rounds?</h3>
+        <div class="round-count-buttons">
+          <button class="count-btn round-btn active" data-rounds="1">1</button>
+          <button class="count-btn round-btn" data-rounds="2">2</button>
+          <button class="count-btn round-btn" data-rounds="3">3</button>
+        </div>
+      </div>
+
+      <div class="player-configs" id="player-configs"></div>
+
+      <button id="start-btn" disabled>Start Game!</button>
+    </div>
+
+    <!-- HUD -->
+    <div id="hud">
+      <div class="hud-top">
+        <div>
+          <div class="current-player-display">
+            <div class="player-dot" id="hud-player-dot"></div>
+            <span class="current-player-name" id="hud-player-name">Player 1</span>
+          </div>
+          <div class="round-display" id="hud-round">Round 1 of 2</div>
+        </div>
+
+        <div class="timer-container" id="timer-container" style="display:none;">
+          <svg class="timer-circle" viewBox="0 0 36 36">
+            <circle class="timer-circle-bg" cx="18" cy="18" r="15.9" />
+            <circle class="timer-circle-progress" id="timer-progress"
+              cx="18" cy="18" r="15.9"
+              stroke-dasharray="100 100"
+              stroke-dashoffset="0" />
+          </svg>
+          <span class="timer-text" id="timer-text">10</span>
+        </div>
+
+        <div class="tally-board" id="tally-board">
+          <h4>Score</h4>
+          <div id="tally-rows"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Answer Area -->
+    <div id="answer-area">
+      <div class="equation-display" id="equation-display">2 + 2 = ?</div>
+      <div class="answer-display" id="answer-display">&nbsp;</div>
+      <div class="number-pad" id="number-pad">
+        <button class="num-btn" data-num="1">1</button>
+        <button class="num-btn" data-num="2">2</button>
+        <button class="num-btn" data-num="3">3</button>
+        <button class="num-btn" data-num="4">4</button>
+        <button class="num-btn" data-num="5">5</button>
+        <button class="num-btn" data-num="6">6</button>
+        <button class="num-btn" data-num="7">7</button>
+        <button class="num-btn" data-num="8">8</button>
+        <button class="num-btn" data-num="9">9</button>
+        <button class="num-btn" data-num="0">0</button>
+        <button class="num-btn clear-btn" data-action="clear">C</button>
+        <button class="num-btn submit-btn" data-action="submit">OK</button>
+      </div>
+    </div>
+
+    <!-- Game Controls -->
+    <div class="game-controls" id="game-controls" style="display:none;">
+      <button class="ctrl-btn pause-btn" id="pause-btn">Pause</button>
+      <button class="ctrl-btn restart-btn" id="restart-btn">Restart</button>
+    </div>
+
+    <!-- Pause Screen -->
+    <div id="pause-screen">
+      <div class="pause-title">Paused</div>
+      <div class="pause-buttons">
+        <button class="pause-btn resume-btn" id="resume-btn">Resume</button>
+        <button class="pause-btn new-game-btn" id="new-game-btn">New Game</button>
+        <button class="pause-btn reset-btn" id="reset-game-btn">Reset &amp; Clear</button>
+      </div>
+    </div>
+
+    <!-- Card Picker -->
+    <div id="card-picker"></div>
+
+    <!-- Turn Message -->
+    <div id="turn-message">
+      <div class="turn-message-text" id="turn-message-text"></div>
+      <div class="turn-sub-message" id="turn-sub-message"></div>
+    </div>
+
+    <!-- Result Screen -->
+    <div id="result-screen">
+      <div class="result-title" id="result-title">Round Complete!</div>
+      <div class="result-subtitle" id="result-subtitle"></div>
+      <div class="result-scores" id="result-scores"></div>
+      <button class="result-btn" id="result-btn">Next Round</button>
+    </div>
+  </div>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>
